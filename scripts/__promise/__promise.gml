@@ -4,7 +4,7 @@
  * Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  *
  * @author Emmanuel Di Iorio (aka "Xeryan")
- * @version 0.0.1-alpha
+ * @version 0.0.3-alpha
  * @license MIT
  *
  * @param {Function} executor The function that will be exeduted after the promise initialization
@@ -24,28 +24,39 @@ function Promise(executor, _context = undefined) constructor {
 	__exec = function(array, resp) {
 		// When a callback returns a Struct<Promise>, add an interceptor in the original promise in order to inject the response into this parent promise
 		if (is_struct(resp) && instanceof(resp) == "Promise") {
-			var closure = { 
-				__exec: __exec,
-				__success_callbacks: __success_callbacks,
-				__error_callbacks: __error_callbacks				
+			var injectedCallback = function(response) {
+				return response;
 			};
+			array_insert(__success_callbacks, array_length(__success_callbacks) ? 1 : 0, injectedCallback);
+			array_insert(__error_callbacks, array_length(__error_callbacks) ? 1 : 0, injectedCallback);
+			
+			var closure = {
+				__exec: __exec,
+				parent: self,
+				__success_callbacks: __success_callbacks,
+				__error_callbacks: __error_callbacks
+			};
+			
 			resp.next(method(closure, function(childResp) {
 				__exec(__success_callbacks, childResp);
 			}));
 			resp.error(method(closure, function(childErr) {
+				parent.__success_callbacks = [];
 				__exec(__error_callbacks, childErr);
 			}));
-			var injectedCallback = function(resp) { 
-				return resp; 
-			};
-			array_insert(__success_callbacks, 0, injectedCallback);
-			array_insert(__error_callbacks, 0, injectedCallback);
+			return;
 		}
 			
 		// Execute the first callback in the list
 		if (!array_length(array)) return;
 		var callback = array[0];
 		array_delete(array, 0, 1);
+		
+		if (!is_method(callback)) {
+			show_error("Promise callback is not a method", false);
+			return
+		}
+		
 		callback(resp);
 	};
 	
@@ -53,8 +64,9 @@ function Promise(executor, _context = undefined) constructor {
 		__exec(__success_callbacks, resp);
 	};
 	
-	execError = function(resp) {
-		__exec(__error_callbacks, resp);
+	execError = function(err) {
+		__success_callbacks = [];
+		__exec(__error_callbacks, err);
 	};
 	
 	/**
@@ -101,5 +113,6 @@ function Promise(executor, _context = undefined) constructor {
 		self.error(method(closure, function(err) { callback(err); }));
 	}
 	
+	// Execute the promise function
 	executor(self);
 }

@@ -14,14 +14,17 @@ function playfab_login_custom(custom_id = undefined, create_account = true, on_c
 		CustomId: custom_id == undefined ? __uuid_generate() : "test"
 	};
 	
-	var promise = __playfab_call_api("Client/LoginWithCustomID", body, "POST", ds_map_create(), false)
+	var promise = __playfab_call_api("Client/LoginWithCustomID", body, ds_map_create(), false)
 	
 	.next(function(resp) {
-		__playfab_obj.session_ticket = resp.SessionTicket;		
+		with (__playfab_obj) {
+			session_ticket = resp.SessionTicket;		
+			playfab_id = resp.PlayFabId;
+		}
+		
 		return resp;
 	});
 	
 	if (on_callback != undefined) promise.addCallback(on_callback);
-	
 	return promise;
 }
