@@ -23,12 +23,22 @@ function __playfab_call_api(resource_url, body = {}, api_method = "POST", header
 		if (enable_logs) {
 			show_debug_message("[Playfab.Request] " + api_method + " " + resource_url + chr(13) + chr(10) + "Body: " + json + chr(13) + chr(10) + "----------------------");		
 		}
+		
+		var closure = {
+			title_id: title_id,
+			resource_url: resource_url,
+			api_method: api_method,
+			headers: headers,
+			json: json
+		};
 	
-		var request_id = http_request("https://" + title_id + ".playfabapi.com/" + resource_url, api_method, headers, json);
-		var promise = new Promise(api_method + " " + resource_url);	
-	
-		// Store this request in the requests list
-		__playfab_obj.requests[$ request_id] = promise;
+		// Create the promise
+		var promise = new Promise(method(closure, function(promise) {
+			var request_id = http_request("https://" + title_id + ".playfabapi.com/" + resource_url, api_method, headers, json);
+			
+			// Store this request in the requests list
+			__playfab_obj.requests[$ request_id] = promise;
+		}), api_method + " " + resource_url);
 		
 		return promise;
 	}

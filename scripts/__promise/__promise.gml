@@ -7,11 +7,12 @@
  * @version 0.0.1-alpha
  * @license MIT
  *
+ * @param {Function} executor The function that will be exeduted after the promise initialization
  * @param {Any} [context] Any data that may be stored inside the struct for later usage (optional)
  * 
  * @return {Struct<Promise>}
  */
-function Promise(_context = undefined) constructor {
+function Promise(executor, _context = undefined) constructor {
 	context = _context;
 	__success_callbacks = [];
 	__error_callbacks = [];
@@ -99,4 +100,6 @@ function Promise(_context = undefined) constructor {
 		self.next(method(closure, function(resp) { callback(undefined, resp); }));
 		self.error(method(closure, function(err) { callback(err); }));
 	}
+	
+	executor(self);
 }
