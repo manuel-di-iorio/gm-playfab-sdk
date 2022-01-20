@@ -1,49 +1,29 @@
 /**
  * Create a Promise-like struct with next/error functions.
  * Callbacks execution (success/error) have to be externally handled, pratically calling promise.execSuccess() and promise.execError()
- * Reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  *
  * @author Emmanuel Di Iorio (aka "Xeryan")
  * @version 0.0.3-alpha
  * @license MIT
  *
- * @param {Function} executor The function that will be exeduted after the promise initialization
+ * @param {Function} executor The function that will be executed after the promise initialization
  * @param {Any} [context] Any data that may be stored inside the struct for later usage (optional)
  * 
  * @return {Struct<Promise>}
  */
-function Promise(executor, _context = undefined) constructor {
-	context = _context;
+function Promise(executor, context = undefined) constructor {
+	self.context = context;
 	__success_callbacks = [];
 	__error_callbacks = [];
 	
 	/**
-	 * This is the main method, used to recursively call the first callback in the promise list.
-	 * Also, when a callback returns a promise, it will add an interceptor to inject its response into the parent promise first callback
+	 * This is the main method, used to recursively call the first callback in the list.
 	 */
 	__exec = function(array, resp) {
 		// When a callback returns a Struct<Promise>, add an interceptor in the original promise in order to inject the response into this parent promise
-		if (is_struct(resp) && instanceof(resp) == "Promise") {
-			var injectedCallback = function(response) {
-				return response;
-			};
-			array_insert(__success_callbacks, array_length(__success_callbacks) ? 1 : 0, injectedCallback);
-			array_insert(__error_callbacks, array_length(__error_callbacks) ? 1 : 0, injectedCallback);
-			
-			var closure = {
-				__exec: __exec,
-				parent: self,
-				__success_callbacks: __success_callbacks,
-				__error_callbacks: __error_callbacks
-			};
-			
-			resp.next(method(closure, function(childResp) {
-				__exec(__success_callbacks, childResp);
-			}));
-			resp.error(method(closure, function(childErr) {
-				parent.__success_callbacks = [];
-				__exec(__error_callbacks, childErr);
-			}));
+		if (is_struct(resp) && instanceof(resp) == "Promise") {			
+			resp.next(execSuccess);
+			resp.error(execError);
 			return;
 		}
 			
@@ -51,19 +31,20 @@ function Promise(executor, _context = undefined) constructor {
 		if (!array_length(array)) return;
 		var callback = array[0];
 		array_delete(array, 0, 1);
-		
-		if (!is_method(callback)) {
-			show_error("Promise callback is not a method", false);
-			return
-		}
-		
 		callback(resp);
 	};
 	
+	/**
+	 * Fullfill the promise with a success response. Will recursively call the next callback in the chain
+	 */
 	execSuccess = function(resp) {
 		__exec(__success_callbacks, resp);
 	};
 	
+	/**
+	 * Reject the promise with an error
+	 * @note: By rejecting the promise, all other success callbacks in the chain will be dropped
+	 */	
 	execError = function(err) {
 		__success_callbacks = [];
 		__exec(__error_callbacks, err);

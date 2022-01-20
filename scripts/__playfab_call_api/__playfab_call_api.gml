@@ -28,10 +28,8 @@ function __playfab_call_api(resource_url, body = {}, headers = ds_map_create(), 
 			}
 		}
 		
-		// Log
-		if (enable_logs) {
-			show_debug_message(date_datetime_string(date_current_datetime()) + " - [Playfab.Request] " + resource_url + chr(13) + chr(10) + "Body: " + json + chr(13) + chr(10) + "----------------------");		
-		}
+		// Logs
+		if (enable_logs) __playfab_log("🡆 ", "Request", resource_url, json);
 		
 		var closure = {
 			title_id: title_id,

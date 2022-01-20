@@ -12,7 +12,7 @@ function playfab_player_update_statistic(statisticName, value, version = undefin
 	var stat = {
 		StatisticName: statisticName,
 		Value: value
-	}
+	};
 	
 	if (version != undefined) {
 		stat.Version = version;

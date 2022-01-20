@@ -18,9 +18,9 @@ function playfab_player_get_leaderboard(statisticName, start = undefined, limit 
 	
 	var promise = __playfab_call_api("Client/GetLeaderboard", body)
 	
-	promise.next(function(resp) {
-		return resp.Leaderboard;
-	});
+	//.next(function(resp) {
+	//	return resp.Leaderboard;
+	//});
 	
 	if (on_callback != undefined) promise.addCallback(on_callback);
 	return promise;
