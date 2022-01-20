@@ -6,7 +6,7 @@ playfab_login_custom("test")
 	show_debug_message("Logged in! User ID: " + resp.PlayFabId);
 })
 .next(function() {
-	return playfab_player_update_statistic("leaderboard", 50.5);
+	return playfab_player_update_statistic("leaderboard", 50);
 })
 .next(function() {
 	return playfab_player_get_leaderboard("leaderboard");
