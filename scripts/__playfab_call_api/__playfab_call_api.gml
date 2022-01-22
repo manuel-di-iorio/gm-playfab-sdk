@@ -39,7 +39,7 @@ function __playfab_call_api(resource_url, body = {}, headers = ds_map_create(), 
 		};
 		
 		// Create the promise
-		var promise = new Promise(method(closure, function(promise) {
+		var promise = new Promise(method(closure, function(resolve, reject, promise) {
 			var request_id = http_request("https://" + title_id + ".playfabapi.com/" + resource_url, "POST", headers, json);
 			
 			// Store this request in the requests list

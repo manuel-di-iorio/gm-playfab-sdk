@@ -1,9 +1,11 @@
 /**
  * Create a Promise-like struct with next/error functions.
- * Callbacks execution (success/error) have to be externally handled, pratically calling promise.execSuccess() and promise.execError()
+ * Callbacks execution (success/error) have to be externally handled, pratically calling promise.resolve() and promise.reject()
+ *
+ * Similar reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  *
  * @author Emmanuel Di Iorio (aka "Xeryan")
- * @version 0.0.3-alpha
+ * @version 1.0.0
  * @license MIT
  *
  * @param {Function} executor The function that will be executed after the promise initialization
@@ -17,13 +19,13 @@ function Promise(executor, context = undefined) constructor {
 	__error_callbacks = [];
 	
 	/**
-	 * This is the main method, used to recursively call the first callback in the list.
+	 * This is the main internal method, used to recursively call the first callback in the list.
 	 */
 	__exec = function(array, resp) {
 		// When a callback returns a Struct<Promise>, add an interceptor in the original promise in order to inject the response into this parent promise
 		if (is_struct(resp) && instanceof(resp) == "Promise") {			
-			resp.next(execSuccess);
-			resp.error(execError);
+			resp.next(resolve);
+			resp.error(reject);
 			return;
 		}
 			
@@ -37,7 +39,7 @@ function Promise(executor, context = undefined) constructor {
 	/**
 	 * Fullfill the promise with a success response. Will recursively call the next callback in the chain
 	 */
-	execSuccess = function(resp) {
+	resolve = function(resp) {
 		__exec(__success_callbacks, resp);
 	};
 	
@@ -45,7 +47,7 @@ function Promise(executor, context = undefined) constructor {
 	 * Reject the promise with an error
 	 * @note: By rejecting the promise, all other success callbacks in the chain will be dropped
 	 */	
-	execError = function(err) {
+	reject = function(err) {
 		__success_callbacks = [];
 		__exec(__error_callbacks, err);
 	};
@@ -95,5 +97,5 @@ function Promise(executor, context = undefined) constructor {
 	}
 	
 	// Execute the promise function
-	executor(self);
+	executor(resolve, reject, self);
 }

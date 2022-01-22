@@ -8,7 +8,7 @@ try {
 	var status = async_load[? "status"];
 	if (status < 0) {
 		if (enable_logs) __playfab_log("🡄 ", "ResponseError", promise.context, "Request generic error with status " + string(status));		
-		promise.execError({ error: "RequestError", code: 500, status: "RequestError", errorCode: status, errorMessage: "Request generic error" });
+		promise.reject({ error: "RequestError", code: 500, status: "RequestError", errorCode: status, errorMessage: "Request generic error" });
 		exit;
 	}
 
@@ -22,14 +22,14 @@ try {
 
 	if (httpStatus < 200 || httpStatus > 299) {
 		if (enable_logs) __playfab_log("🡄 ", "ResponseError", promise.context, json_stringify(response));
-		promise.execError(response);
+		promise.reject(response);
 		exit;
 	}
 	
 	// Success response
 	if (enable_logs) __playfab_log("🡄 ", "Response", promise.context, json_stringify(response.data));
-	promise.execSuccess(response.data);
+	promise.resolve(response.data);
 } catch (error) {
 	if (enable_logs) __playfab_log("🡄 ", "ResponseError", promise.context, error.message);
-	promise.execError(error);
+	promise.reject(error);
 }
